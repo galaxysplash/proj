@@ -5,17 +5,19 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <expected>
 #include <functional>
 #include <optional>
 #include <thread>
 #include <vector>
 
-class ThreadPool {
+class ThreadPool final {
  public:
   constexpr static size_t kMinimumThreadCount{2};
 
-  [[nodiscard("your class")]] std::optional<ThreadPool> create(
-      const size_t thread_count = std::thread::hardware_concurrency()) noexcept;
+  [[nodiscard("your class")]] std::expected<ThreadPool, std::string_view>
+  create(const size_t &thread_count =
+             std::thread::hardware_concurrency()) noexcept;
 
   template <typename LambdaReturn, typename... LambdaArgs>
   [[nodiscard("check for errors")]] std::optional<None> offload_work(
@@ -26,7 +28,7 @@ class ThreadPool {
   void operator delete(void *) = delete;
 
  protected:
-  ThreadPool(const size_t thread_count) noexcept
+  explicit ThreadPool(const size_t thread_count) noexcept
       : thread_count_(thread_count) {}
 
  private:

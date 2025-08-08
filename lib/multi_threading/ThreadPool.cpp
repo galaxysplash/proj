@@ -1,15 +1,28 @@
 #include <proj/multi_threading/ThreadPool.h>
 
+#include <exception>
+#include <expected>
+#include <format>
 #include <optional>
+#include <string_view>
+#include <utility>
 
-std::optional<ThreadPool> ThreadPool::create(
-    const size_t thread_count) noexcept {
+std::expected<ThreadPool, std::string_view> ThreadPool::create(
+    const size_t &thread_count) noexcept {
   if (thread_count < kMinimumThreadCount) {
-    return std::nullopt;
+    return std::unexpected{
+        std::format("ThreadPool: thread count has to be bigger than {}",
+                    kMinimumThreadCount)};
+  }
+  auto inst = ThreadPool{thread_count};
+
+  try {
+    inst.pool_.reserve(thread_count % 2 == 0 ? thread_count : thread_count + 1);
+  } catch (const std::exception &e) {
+    return std::unexpected{std::format("ThreadPool: {}", e.what())};
   }
 
-  pool_.reserve(thread_count % 2 == 0 ? thread_count : thread_count + 1);
-  return ThreadPool{thread_count};
+  return std::move(inst);
 }
 
 template <typename LambdaReturn, typename... LambdaArgs>
