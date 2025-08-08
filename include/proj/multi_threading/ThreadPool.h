@@ -11,13 +11,10 @@
 #include <thread>
 #include <vector>
 
-class ThreadPool final {
+class ThreadPool {
  public:
+  friend class ThreadPoolFactory;
   constexpr static size_t kMinimumThreadCount{2};
-
-  [[nodiscard("your class")]] std::expected<ThreadPool, std::string_view>
-  create(const size_t &thread_count =
-             std::thread::hardware_concurrency()) noexcept;
 
   template <typename LambdaReturn, typename... LambdaArgs>
   [[nodiscard("check for errors")]] std::optional<None> offload_work(
@@ -34,6 +31,14 @@ class ThreadPool final {
  private:
   const size_t thread_count_;
   std::vector<std::thread> pool_{};
+};
+
+class ThreadPoolFactory {
+ public:
+  [[nodiscard(
+      "your class")]] virtual std::expected<ThreadPool, std::string_view>
+  create(const size_t &thread_count =
+             std::thread::hardware_concurrency()) noexcept;
 };
 
 #endif

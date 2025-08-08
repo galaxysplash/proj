@@ -7,12 +7,23 @@
 #include <string_view>
 #include <utility>
 
-std::expected<ThreadPool, std::string_view> ThreadPool::create(
+template <typename LambdaReturn, typename... LambdaArgs>
+std::optional<None> ThreadPool::offload_work(
+    LambdaArgs &&...args,
+    const std::function<LambdaReturn(LambdaArgs...)> &&work) noexcept {
+  if (this->pool_.size() > this->thread_count_) {
+    return std::nullopt;
+  }
+
+  // TODO! start implementing
+}
+
+std::expected<ThreadPool, std::string_view> ThreadPoolFactory::create(
     const size_t &thread_count) noexcept {
-  if (thread_count < kMinimumThreadCount) {
+  if (thread_count < ThreadPool::kMinimumThreadCount) {
     return std::unexpected{
         std::format("ThreadPool: thread count has to be bigger than {}",
-                    kMinimumThreadCount)};
+                    ThreadPool::kMinimumThreadCount)};
   }
   auto inst = ThreadPool{thread_count};
 
@@ -23,13 +34,4 @@ std::expected<ThreadPool, std::string_view> ThreadPool::create(
   }
 
   return std::move(inst);
-}
-
-template <typename LambdaReturn, typename... LambdaArgs>
-std::optional<None> ThreadPool::offload_work(
-    LambdaArgs &&...args,
-    const std::function<LambdaReturn(LambdaArgs...)> &&work) noexcept {
-  if (this->pool_.size() > this->thread_count_) {
-    return std::nullopt;
-  }
 }
